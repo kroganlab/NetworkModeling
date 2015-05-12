@@ -7,9 +7,10 @@ myConnect = function(){
   return(con)
 }
 
-getGenomics = function(cell_line, strain, lfc, q, table){
+getGenomics = function(cell_line, strain, lfc, q, table, mapping='mygene_human_1to1', condition_1='.*', condition_2='.*'){
   con = myConnect()
-  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, '' as 'kegg_id', GP.uniprot_ac, R.entrez_id, R.log2fc, R.q_value from experiments E join `%s` R on R.`experiment_id` = E.`experiment_id` and R.`sample_1` = E.`sample_1_code` and R.`sample_2` = E.`sample_2_code` left join mygene_human_1to1 GP on GP.`entrez_id` = R.`entrez_id` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and R.`q_value` < %s and abs(R.`log2fc` > %s)", table, cell_line, strain, q, lfc)
+  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, '' as 'kegg_id', GP.uniprot_ac, R.entrez_id, R.log2fc, R.q_value from experiments E join `%s` R on R.`experiment_id` = E.`experiment_id` and R.`sample_1` = E.`sample_1_code` and R.`sample_2` = E.`sample_2_code` left join %s GP on GP.`entrez_id` = R.`entrez_id` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and R.`q_value` < %s and abs(R.`log2fc`) > %s and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s'", table, mapping, cell_line, strain, q, lfc, condition_1, condition_2)
+  cat(str_c(query,'\n'))
   res = dbGetQuery(con, query)
   dbDisconnect(con)
   return(res)
