@@ -2,8 +2,8 @@ library(RMySQL)
 library(data.table)
 library(stringr)
 
-myConnect = function(){
-  con = dbConnect(RMySQL::MySQL(), dbname = 'FluOMICS', host = '127.0.0.1', port = 3307, default.file = '/etc/my.cnf')
+myConnect = function(dbname='FluOMICS'){
+  con = dbConnect(RMySQL::MySQL(), dbname = dbname, host = '127.0.0.1', port = 3307, default.file = '/etc/my.cnf')
   return(con)
 }
 
