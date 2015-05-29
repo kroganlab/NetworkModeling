@@ -18,7 +18,7 @@ getGenomics = function(cell_line, strain, lfc, q, table, mapping='mygene_human_1
 
 getModProteomics = function(cell_line, strain, lfc, q, table, mapping='mygene_human_1to1'){
   con = myConnect()
-  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status,'' as 'kegg_id', P.protein, GP.`entrez_id`, P.log2fc, P.adj_pvalue from experiments E join `%s` P on P.`experiment_id` = E.`experiment_id` and P.`sample_1` = E.`sample_1_code` and P.`sample_2` = E.`sample_2_code` left join %s GP on GP.`uniprot_ac` = P.`protein` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and P.`adj_pvalue` < %s and abs(P.`log2fc` > %s)", table, mapping, cell_line, strain, q, lfc)
+  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status,'' as 'kegg_id', P.protein, GP.`entrez_id`, P.log2fc, P.adj_pvalue from experiments E join `%s` P on P.`experiment_id` = E.`experiment_id` and P.`sample_1` = E.`sample_1_code` and P.`sample_2` = E.`sample_2_code` left join %s GP on GP.`uniprot_ac` = P.`protein` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and P.`adj_pvalue` < %s and abs(P.`log2fc`) > %s", table, mapping, cell_line, strain, q, lfc)
   res = dbGetQuery(con, query)
   dbDisconnect(con)
   return(res)
