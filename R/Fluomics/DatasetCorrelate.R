@@ -16,8 +16,8 @@ STRAIN = 'H1N1'
 LFC = 2
 FDR = 0.0001
 
-###############
-## GET DATASETS
+#############################
+## GET DATASETS FO MOUSE H1N1
 
 CONDITION='.*'
 genomics_mouse_H1N1 = getGenomics(cell_line = CELL_LINE, strain = STRAIN, lfc = LFC, q = FDR, table = 'genomics_rnaseq_mouse', condition_1 = '.*', condition_2 = '.*')
