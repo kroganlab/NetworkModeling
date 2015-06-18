@@ -23,24 +23,26 @@ getGenomics = function(cell_line, strain, lfc=2, q=0.05, table, condition_1='.*'
   }else{
     criteria = ""
   }
-  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, R.entrez_id as 'id',R.entrez_id, '' as uniprot_ac, '' as 'kegg_id', R.log2fc, R.q_value as 'q_value' from experiments E join `%s` R on R.`experiment_id` = E.`experiment_id` and R.`sample_1` = E.`sample_1_code` and R.`sample_2` = E.`sample_2_code` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", table, cell_line, strain, condition_1, condition_2, criteria)
-  cat(str_c(query,'\n'))
+  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, R.entrez_id as 'id', R.entrez_id, R.symbol, '' as uniprot_ac, '' as 'kegg_id', R.log2fc, R.q_value as 'q_value' from experiments E join `%s` R on R.`experiment_id` = E.`experiment_id` and R.`sample_1` = E.`sample_1_code` and R.`sample_2` = E.`sample_2_code` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", table, cell_line, strain, condition_1, condition_2, criteria)
+  #cat(str_c(query,'\n'))
   res = dbGetQuery(con, query)
   dbDisconnect(con)
   return(res)
 }
 
-getModProteomics = function(cell_line, strain, lfc=2, q=0.05, table, mapping='mygene_human_1to1', condition_1='.*', condition_2='.*', by="confidence", id_list=NULL){
+getModProteomics = function(cell_line, strain, lfc=2, q=0.05, table, mapping='mygene_human', condition_1='.*', condition_2='.*', by="confidence", id_list=NULL){
   con = myConnect()
   if(by=="confidence"){
     criteria = sprintf("and P.`adj_pvalue` < %s and abs(P.`log2fc`) > %s", q, lfc)
   }else if(by=="entrez_id"){
     criteria = sprintf("and GP.entrez_id in %s", str_c("('",str_c(id_list,collapse = "','"),"')"))
+  }else if(by=="id"){
+    criteria = sprintf("and P.mod_sites in %s", str_c("('",str_c(id_list,collapse = "','"),"')"))
   }else{
     criteria = ""
   }
-  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, P.mod_sites as 'id', GP.entrez_id, P.protein as uniprot_ac, '' as 'kegg_id', P.log2fc, P.adj_pvalue as 'q_value' from experiments E join `%s` P on P.`experiment_id` = E.`experiment_id` and P.`sample_1` = E.`sample_1_code` and P.`sample_2` = E.`sample_2_code` left join %s GP on GP.`uniprot_ac` = P.`protein` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", table, mapping, cell_line, strain, condition_1, condition_2, criteria)
-  cat(str_c(query,'\n'))
+  query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, P.mod_sites as 'id', GP.entrez_id, P.symbol, P.protein as uniprot_ac, '' as 'kegg_id', P.log2fc, P.adj_pvalue as 'q_value' from experiments E join `%s` P on P.`experiment_id` = E.`experiment_id` and P.`sample_1` = E.`sample_1_code` and P.`sample_2` = E.`sample_2_code` left join %s GP on GP.`uniprot_ac` = P.`protein` where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", table, mapping, cell_line, strain, condition_1, condition_2, criteria)
+  #cat(str_c(query,'\n'))
   res = dbGetQuery(con, query)
   dbDisconnect(con)
   return(res)
@@ -53,13 +55,15 @@ getMouseMetabolomics = function(cell_line, strain, lfc, q, condition_1='.*', con
     criteria = sprintf("and M.`adj_pvalue` < %s and abs(M.`log2fc`) > %s", q, lfc)
   }else if(by=="entrez_id"){
     criteria = sprintf("and HE.`entrez_gene_id_mouse` in %s", str_c("('",str_c(id_list,collapse = "','"),"')"))
+  }else if(by=="id"){
+    criteria = sprintf("and M.metabolite in %s", str_c("('",str_c(id_list,collapse = "','"),"')"))
   }else{
     criteria = ""
   }
   if(only_known_metabolites){
-    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.rounded_mass_id as 'id', HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join `metabolomics_mouse` M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' and HE.`orthology_confidence` >= %s %s", cell_line, strain, condition_1, condition_2, mouse_human_orthology_confidence, criteria)   
+    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.metabolite as 'id', M.rounded_mass_id, HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join `metabolomics_mouse` M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' and HE.`orthology_confidence` >= %s %s", cell_line, strain, condition_1, condition_2, mouse_human_orthology_confidence, criteria)   
   }else if(only_known_metabolites==F){
-    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.rounded_mass_id as 'id', HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join `metabolomics_mouse` M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` left join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` left join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", cell_line, strain, condition_1, condition_2, criteria)    
+    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.metabolite as 'id', M.rounded_mass_id, HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join `metabolomics_mouse` M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` left join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` left join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", cell_line, strain, condition_1, condition_2, criteria)    
   }else{
     cat('bad combination of parameters\n')
     quit()
