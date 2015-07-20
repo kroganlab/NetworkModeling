@@ -1,0 +1,44 @@
+---
+title: "Cyto Shiny Pilot tool"
+author: 
+date: "July 20, 2015"
+output:
+  html_document:
+    keep_md: yes
+---
+
+
+
+
+
+*ui.R and server.R are the two required files for shiny to run.  (alternately they can be combined into one file named app.R)  In our current implementation, all R functions, java script and data needed needed for the app are sourced in the top of the ui.R file.* 
+
+*Shiny needs everything in the same directory or a sub directory of the directory in which ui.R and server.R are found.  Here is the sub directory structure (as of July 20, 2015).*
+
+## Sub Directory Structure ##
+
+### R_to_Cyjs_wrapper_functions ###
+
+#### CCN2_pie.R ####
+This R function takes a dataframe of nodes and a dataframe of edges and returns a long list of character strings with the node and edge data formatted for cytoscape.js.  Currently there is some hard coding for it to work with the H1N1, H3N2, and H5N1 viruses, and some tweaking of formats from the original version.
+
+#### cytoscapeJsSimpleNetwork3_strain.R ####
+This R function uses the output from CCN2_pie.R to generate the cytocscape.JS graph displayed by shiny.
+
+### www ###
+
+Any Javascript that is sourced in via javascript is found here.  Currently it is all cytoscape.js however any java script sourced in the same way is placed here since the subdirectory name "www" is where shiny looks for javascript.
+
+### R_functions ###
+
+As the name implies these are all R functions which are used to assemble the networks from the raw data etc.  Some of these functions are called from server.r to subset the network and create the attributes etc.
+
+### data ###
+
+As the name implies, the raw network data along with any reference data (for edge or attribute creation etc) is stored here.
+
+### shinyapps ###
+
+This is created by shiny, so does not need to be copied. 
+
+
