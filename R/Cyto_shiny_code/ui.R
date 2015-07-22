@@ -1,4 +1,5 @@
 library(shiny)
+#library(tidyr)
 #this function takes r dataframes of nodes and edges and outputs the info/data in a list of 
 # character strings which is then used by cytoscape.js to create the nework graph. 
 source("./R_to_Cyjs_wrapper_functions/CCN2_pie.R")
@@ -18,7 +19,7 @@ source("./R_functions/Create_Flu_network6.R")
 #library(DLBCL)
 #library(igraph)
 
-
+#(theme = "bootstrap.css",
 shinyUI(fluidPage(
         tags$head(
                 #  Any javascript sourced in here must be placed in the "www" subdirectory in order for it to be found
@@ -33,7 +34,7 @@ shinyUI(fluidPage(
         sidebarLayout(
                 sidebarPanel(width=3, 
                              sliderInput("q_value", "primary QVAL:", min=.001, max=.1, value=.001),
-                             sliderInput("log2FC", "log 2 FC:", min=1.0 , max=3.0, value=2.0),
+                             sliderInput("log2FC", "log 2 FC:", min=1.5 , max=3.0, value=2.0),
                              h4("Select virus(es)", align = "left"),
                              # The 'div(style="display:inline-block",)' portion simply allows the checkboxes to be displayed side by side, otherwise a new line will start for
                              # each line here.  
@@ -64,91 +65,34 @@ shinyUI(fluidPage(
                              #            checkboxInput("addLinks", "Add Links on Nodes?", TRUE)
                              h5("Edge Color Legend", align = "left"),
                              
-                             # node.colors.18 <- c("#CC3333", "#FF6600", "#3366FF", "#00FF00", "#00CCCC","#00CCFF" ,"#669955",
-                             #                     "#9933FF", "#FF00FF", "#FFCCCC", "#FFCC99", "#FFFFCC", "#CCFFCC", "#99FFCC",
-                             #                     "#CCFFFF" ,"#99CCFF", "#CCCCFF", "#FFCCFF" )
-                             
+#                              node.colors.18 <- c("#CC3333", "#FF6600", "#FFFF33", "#00FF00", "#00CCCC","#00CCFF" ,"#3366FF",
+#                                                  "#9933FF", "#FF00FF", "#FFCCCC", "#FFCC99", "#FFFFCC", "#CCFFCC", "#99FFCC",
+#                                                  "#CCFFFF" ,"#99CCFF", "#CCCCFF", "#FFCCFF" )                             
                              # textOutput('color1'),
                              # textOutput('color2'),
                              #       This is the makeshift edge legend,  the outputs 'text1', 'text2' etc are the type of edge which is obtained from the currently displayed network 
                              #       (in server.R).   Next up is to hard assign the colors to edge type with check boxes.  
+                             div( style = "color:#CC3333",checkboxInput("lit", "literature", value = T)),
+                             div(style="color:#FF6600", checkboxInput("met", "metabolic", value = T)),
+                             div(style="color:#FFFF33", checkboxInput("bin", "binary", value = T)),
+                             div(style="color:#00FF00", checkboxInput("reg", "regulatory", value = T)),
+                             div(style="color:#00CCCC", checkboxInput("com", "complexes", value = T)),
+                             div(style="color:#00CCFF", checkboxInput("kin", "kinase", value = T)),
+                             div(style="color:#3366FF", checkboxInput("sig", "signaling", value = T)),
+                             #?checkboxInput
                              textOutput('text1'),
-                             tags$head(tags$style("#text1{color: #CC3333;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
+#                              tags$head(tags$style("#text1{color: #CC3333;
+#                                           font-size: 20+px;
+#                                           font-style: italic;
+#                                           }"
+#                              )
+#                              ),
                              textOutput('text2'),
-                             tags$head(tags$style("#text2{color: #FF6600;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
                              textOutput('text3'),
-                             tags$head(tags$style("#text3{color: #3366FF;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
                              textOutput('text4'),
-                             tags$head(tags$style("#text4{color: #00FF00;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
                              textOutput('text5'),
-                             tags$head(tags$style("#text5{color: #00CCCC;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
                              textOutput('text6'),
-                             tags$head(tags$style("#text6{color: #00CCFF;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
-                             textOutput('text7'),
-                             tags$head(tags$style("#text7{color:  #669955;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
-                             textOutput('text8'),
-                             tags$head(tags$style("#text8{color: #9933FF;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
-                             textOutput('text9'),
-                             tags$head(tags$style("#text9{color: #FF00FF;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
-                             textOutput('text10'),
-                             tags$head(tags$style("#text10{color: #FF6600;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             ),
-                             textOutput('text11'),
-                             tags$head(tags$style("#text11{color: #FFCCCC;
-                                          font-size: 20+px;
-                                          font-style: italic;
-                                          }"
-                             )
-                             )
+                             textOutput('text7')
                              
                 ),
                 
@@ -158,3 +102,5 @@ shinyUI(fluidPage(
                 
         )
 ))
+
+

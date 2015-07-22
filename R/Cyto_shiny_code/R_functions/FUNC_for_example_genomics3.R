@@ -49,6 +49,11 @@ color_column2 <- function(node_data, column_name){
         list(node_data, colors_and_tags)
 }
 ##
+##
+
+
+
+?data.frame
 color_column <- function(node_data, column_name){
         node.colors.18 <- c("#CC3333", "#FF6600", "#FFFF33", "#00FF00", "#00CCCC","#00CCFF" ,"#3366FF",
                             "#9933FF", "#FF00FF", "#FFCCCC", "#FFCC99", "#FFFFCC", "#CCFFCC", "#99FFCC",
@@ -63,11 +68,33 @@ color_column <- function(node_data, column_name){
         }
         node_data
 }
-
+remove_dup_edge_rev_order <- function(edges_sort, colname1, colname2, attribute_colname1){
+# edges_sort <- edges; colname1 <- 'source'; colname2 <- 'target'; attribute_colname1 <- 'info_source'
+        for(i in 1:nrow(edges_sort)){
+                if(edges_sort[i, colname2] < edges_sort[i,colname1]){
+                        edges_sort[i, "target2"] <- edges_sort[i, colname1]
+                        edges_sort[i, "source2"] <- edges_sort[i, colname2] 
+                } else{
+                        edges_sort[i, "target2"] <- edges_sort[i, colname2]
+                        edges_sort[i, "source2"] <- edges_sort[i, colname1] 
+                }
+        }
+        edges_sort2 <- unique(edges_sort[, c("source2","target2", attribute_colname1)])
+        
+        colnames(edges_sort2) <- c("source", "target", attribute_colname1)
+        edges_sort2
+} # end function definition
 
 Prey_connections <- function(Assoc_DF, col1, col2, List_Prey, col3){
         Assoc_list <- Assoc_DF[Assoc_DF[ , col1]  %in% List_Prey[ , col3] & 
                                        Assoc_DF[ , col2] %in% List_Prey[ , col3] , c(col1, col2)]
+        Assoc_list <- unique(Assoc_list)
+}
+Prey_connections_OR3 <- function(Assoc_DF, col1, col2, List_Prey, col3, sourcecol){
+        Assoc_list1 <- Assoc_DF[Assoc_DF[ , col1]  %in% List_Prey[ , col3]  , c(col1, col2, sourcecol)]
+        Assoc_list2 <- Assoc_DF[Assoc_DF[ , col2]  %in% List_Prey[ , col3]  , c(col2, col1, sourcecol)]
+        colnames(Assoc_list2) <- c(col1, col2 , sourcecol)
+        Assoc_list <- rbind(Assoc_list1,Assoc_list2)
         Assoc_list <- unique(Assoc_list)
 }
 
