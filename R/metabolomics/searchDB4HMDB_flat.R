@@ -17,12 +17,14 @@ searchHMDB <- function(x, hmdb, THRESH){
   metabolite_matches = list()
   pb <- txtProgressBar(min=0, max=length(metabolites), style=3)
   for(i in 1:length(metabolites)){
-    mHp = metabolites[i] + H
-    mNH4p = metabolites[i] + NH4
-    mNap = metabolites[i] + Na
-    mKp = metabolites[i] + K
-    mHn = metabolites[i] - H
-    mCln = metabolites[i] - Cl
+    # NOTE: the reported m.z value already includes the adduct, so in order to search the HMDB db, we need to use the straight mass value
+    #       without the adduct. EG: mHp is m.z = M+H, so to get M, we need to subtract H from m.z . See below formulas.
+    mHp = metabolites[i] - H
+    mNH4p = metabolites[i] - NH4
+    mNap = metabolites[i] - Na
+    mKp = metabolites[i] - K
+    mHn = metabolites[i] + H
+    mCln = metabolites[i] + Cl
     
     mHp = which( (hmdb$weight >= (mHp-THRESH)) & (hmdb$weight <= (mHp+THRESH)) )
     mNH4p = which( (hmdb$weight >= (mNH4p-THRESH)) & (hmdb$weight <= (mNH4p+THRESH)) )

@@ -1,7 +1,7 @@
 
 # Source files
-source('~/projects/NetworkModelling/R/metabolomics/mapMasses.R')
-source('~/projects/NetworkModelling/R/metabolomics/searchDB4HMDB_flat.R')
+source('~/projects/NetworkModeling/R/metabolomics/mapMasses.R')
+source('~/projects/NetworkModeling/R/metabolomics/searchDB4HMDB_flat.R')
 
 
 # ~~~~~~~~~~~~~~~
