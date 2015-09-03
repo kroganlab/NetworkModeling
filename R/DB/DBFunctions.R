@@ -1,6 +1,6 @@
-library(RMySQL)
-library(data.table)
-library(stringr)
+suppressMessages(library(RMySQL))
+suppressMessages(library(data.table))
+suppressMessages(library(stringr))
 
 myConnect = function(dbname='FluOMICS'){
   con = dbConnect(RMySQL::MySQL(), dbname = dbname, host = '127.0.0.1', port = 3307, default.file = '/etc/my.cnf')
@@ -68,7 +68,7 @@ getMouseMetabolomics = function(cell_line, strain, lfc, q, condition_1='.*', con
     cat('bad combination of parameters\n')
     quit()
   }
-  cat(str_c(query,'\n'))
+  #cat(str_c(query,'\n'))
   res = dbGetQuery(con, query)
   dbDisconnect(con)
   return(res)
@@ -84,6 +84,16 @@ getMouseMetabolomics = function(cell_line, strain, lfc, q, condition_1='.*', con
 #   return(res)
 # }
 
+
+
+
+getEntrez = function(table_name, id_list){
+  con = myConnect()
+  query = sprintf("select uniprot_ac, entrez_id from %s where status = 'reviewed' and uniprot_ac in %s",table_name, str_c("('",str_c(id_list,collapse = "','"),"')"))
+  res = dbGetQuery(con, query)
+  dbDisconnect(con)
+  return(res)
+}
 
 getBaseMap = function(basemap_name){
   con = myConnect()
