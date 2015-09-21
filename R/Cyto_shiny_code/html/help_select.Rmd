@@ -1,0 +1,43 @@
+---
+output:
+  html_document: default
+  pdf_document:
+    fig_crop: no
+    fig_height: 4
+    fig_width: 7
+    toc_depth: 0
+---
+**Tips for web tool speed**
+
+For best results in terms of web tool speed, keep main display on some tab other than 'CytoscapeJS' while making choices on left hand side widgets for network selection criteria.  Because the web tool automactially runs immediately after each selection or interaction you make, if you have it on the 'CytoscapeJS' tab it will fully render the plot before you can make another 'widget" choice (time point, virus etc).  For instance, if you have it on the "Nodes" tab instead of the "CytoscapeJS" tab, you can also see how many nodes will be rendered  before clicking on the CytoscapeJS tab to see what it looks like. (if its over say 1000, maybe you want to reconsider!)
+
+**How selection criteria is interpreted for Network selection.**
+
+The Primary QVAL and Fold change sliders are used to filter out data,  Only nodes with a lower Qval or a higher Fold change than the user selected value are displayed.
+
+**Virus and Time Points**
+
+Use the check boxes to select which viruses to view and to select which time points for the data. The nodes are the genes or proteins on which the virus is associated.  The edge connections between the nodes indicate known associations between the nodes.  
+
+Colors are used on the node to indicate which viruses are associated with that node.  If only one virus is selected, the default setting is to only show the corresponding color for that single virus on the nodes.   If more than one virus is selected, any nodes that have more than one virus association will have more than one color (in a 'pie' like fashion).  
+
+The time point is indicated by the shade of the color.  Lighter colors indicate later time points. If more than one time point occurs for a virus on a node the shade of the earliest time point will be shown.
+
+The default setting is to only show colors for selected viruses on the nodes.  If "Show colors on nodes for viruses that aren't selected but occur on same genes for the selected viruses?" is selected, then additional colors will be shown for viruses that were not selected but that also occur on the nodes found for the viruses that were selected.  Note that selecting "Show unselected viruses that also occur on nodes in this network?" will NOT display any additional nodes, it will only display additional color information on the nodes.  
+
+**Edges**
+
+The checkboxes for the available edge types appear dynamically in that the check box will not be displayed for any edge types that are not in the network of selected nodes.
+
+"Remove Nodes without edges" is turn on by default.  This means that any nodes without edges are not shown.  Note that if there are no edges associated with the nodes that meet the selection criteria (user selected virus and timepoints) the cytoscape plot will not be generated.  The tabs "Nodes" and 'Node_attr' can be used to view information on the selected nodes.
+
+**Node and Edge table displays**
+
+The Nodes and edges of the network can be viewed in table form on the Node an Edge tabs.  Some additional information can be found here. In the case where a node has more than one time point or viruses with different time points there will be more than one row or line for that node.  In this way information which was lost in the network plot (for example only the earliest time point shade is shown) can be found here.  
+
+Still confused?  shoot us an email at fluomics.modeling@gmail.com 
+
+
+
+
+

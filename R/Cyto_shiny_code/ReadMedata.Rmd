@@ -1,0 +1,10 @@
+---
+title: "ReadMe"
+author: "Doug Sanders"
+date: "September 21, 2015"
+output: html_document
+---
+
+## This data files in this directory were generated with random number and character functions in R.  The names of the files are the same as the ones with real data. ##
+
+
