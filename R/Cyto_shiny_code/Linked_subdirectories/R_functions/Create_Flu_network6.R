@@ -23,10 +23,10 @@ create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.
   #       CELL_LINE <- 'MDM' # 'A549, HTBE, MDM'
   #       gm_subf <- gm_subf[gm_subf$cell_line == CELL_LINE, ]
   gm_subf <- unique(gm_subf)
-  min_abs2 <- function(Y){
-    val <-  Y[which.max( abs(Y) )]
-    return(val)
-  }
+        min_abs2 <- function(Y){
+          val <-  Y[which.max( abs(Y) )]
+          return(val)
+        }
   
   
   # this line takes the worst fold change for entries from 2 or more experiments
@@ -66,7 +66,7 @@ create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.
 create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
                                h1n1s = F, h3n2s = F, h5n1s = F, map = Mouse_map,
                                T1 = F, T2 = F, T3 = F, T4 = F, T5 = F, T6 = F, T7 = F, T8 = F, time_points,
-                               Show_other_viruses = F ) #Node_stats = NULL)
+                               Show_other_viruses = F , idmult = 1, shape_attribute = 'genomics') #Node_stats = NULL)
 {
   # source in the following line for running directly.
   # DF3 = DF_reshape; h1n1s = T; h3n2s = T; h5n1s = T; T1 = F; T2 = T; T3 = T; T4 = F; T5 = T;  Show_other_viruses = T
@@ -201,12 +201,6 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   AllNodes <- ns6
   
   AllNodes$bkgrnd_highlight <- 'white'
-  #         network_node_list <- namedList(AllNodes, ns2_display)
-  #         network_node_list
-  # }
-  # 
-  # create.network.edges <- function( AllNodes  )
-  # {
   
   edges <- Prey_connections_OR3(map, "geneid_1", "geneid_2", AllNodes , "id", sourcecol = "source") 
   edges <- edges[edges$geneid_1 != edges$geneid_2, ] # remove self edges.
@@ -235,12 +229,43 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   
   edgeData <- edgeList[[1]]; edgeLegendData <- edgeList[[2]]
   edgeData <- unique(edgeData)
-  
+  multiplier <- as.numeric(idmult)
+   edgeData$source <- edgeData$source + (1000000000*multiplier )
+   edgeData$target <- edgeData$target + (1000000000*multiplier )
+   edgeData$thick <- 1.0
+   AllNodes$shape <- switch(shape_attribute, "genomics" = "ellipse", "proteomics" = "hexagon", "metabolomics" = "triangle")
+   AllNodes$id <- as.numeric(AllNodes$id) + (1000000000*multiplier )
+   ns2_display$id <- as.numeric(ns2_display$id) + (1000000000*multiplier) 
   edge_list <- namedList(AllNodes, edgeData, edgeLegendData, ns2_display )
   
   edge_list
 }
 
+edges_between_omics <- function(Nodes){
+  Nodes$colA <- Nodes$id
+  Nodes$colB <- Nodes$id - (floor(Nodes$id/1000000000) * 1000000000)
+  library(plyr)
+#  colA <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
+#  colB <- c(1,2,3,1,1,4,4,8,3,1,3,5,6,7)
+#  DF <- data.frame(colA, colB)
+  DF <- Nodes[ , c('colA', 'colB')]
+  list_fa <- unique(DF[duplicated(DF$colB), 'colB' ])
+  
+  data1 <- list()
+  for(i in 1:length(list_fa)){
+    combination <- combn(DF[DF$colB == list_fa[[i]], "colA"], m = 2)
+    data1[[i]] <- data.frame(source = combination[1,], target = combination[2,])
+  }
+  inter_omics_edges <- rbindlist(data1)
+  inter_omics_edges <- as.data.frame((inter_omics_edges))
+  inter_omics_edges$info_source <- "inter_omics"
+#  inter_omics_edges$color <- "#FF00FF"
+  inter_omics_edges$color <- "#000000"
+  inter_omics_edges$thick <- 5.0
+  inter_omics_edges <- inter_omics_edges[inter_omics_edges$source != inter_omics_edges$target, ] # remove self edges.
+  inter_omics_edges <- unique(inter_omics_edges)
+  inter_omics_edges
+}
 
 
 
@@ -262,7 +287,7 @@ select_edges <- function(edges, lit = F, met = F, bin = F, reg = F, com = F, kin
   edges <- edges[logic,]
   edge_key <- data.frame(info_source = c("literature","metabolic","binary","regulatory","complexes","kinase","signaling"),
                          color = c("#FF0000", "#000000", "#0000FF", "#008000", "#800000","#8D38C9" ,"#F88017"))
-  edges <- merge(edges[ , c('source', 'target', 'info_source')], edge_key, by.x = 'info_source')
+  edges <- merge(edges[ , c('source', 'target', 'info_source', 'thick')], edge_key, by.x = 'info_source')
   edges
 }
 

@@ -1,5 +1,5 @@
 
-#setwd("~/Box Sync/Doug/projects/FLU_Networking_code/Cyto_shiny_dev_generic_data")
+#setwd("~/Box Sync/Doug/projects/FLU_Networking_code/Cyto_shiny_dev_generic_data_mult_2")
 #devtools::install_github('rstudio/DT')
 
 #install.packages("shiny", repos=c("http://rstudio.org/_packages", "http://cran.rstudio.com")) 
@@ -66,12 +66,16 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                         tags$style(type='text/css', ".span4 { max-width: 230px; }")
                       ),
                       width=3, 
-                      selectInput("selectSPECIES", label = h3("SPECIES"),
+                      selectInput("selectSPECIES", label = h6("SPECIES"),
                                   choices = list("HUMAN" = 'human', "MOUSE" = 'mouse'), 
                                   selected = 'mouse'),
                       # This outputs the dynamic UI component
                       uiOutput("ui1"),
-                      
+                      selectInput("selectOMICS", label = h6
+                              ("OMICS-type"),
+                                  choices = list("PROTEOMICS" = 'proteomics', "GENOMICS" = 'genomics',
+                                                 'METABOLOMICS' = 'metabolomics'), 
+                                  selected = 'genomics', multiple = T),
                       sliderInput("q_value", "primary QVAL:", min=.001, max=.1, value=.05),
                       sliderInput("log2FC", "Fold Change:", min=1.5 , max=6.0, value=2.0),
                       div( style="display:inline-block ; color:#FF0000" ,
@@ -180,26 +184,8 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                         #
                       )
                     )
-                    #                 conditionalPanel(
-                    #                 condition = "input.output_type=='nodes'",       
-                    #                         wellPanel(dataTableOutput('cytoscapeJsTable'))
-                    #                 ),
-                    #                 conditionalPanel(
-                    #                         condition = "input.output_type=='edges'",       
-                    #                         wellPanel(dataTableOutput('cytoscapeJsTable'))
-                    #                 )
-                    #         )
-                    #         mainPanel(
-                    #                 conditionalPanel(
-                    #                 condition = "input.output_type=='edges'",       
-                    #                         dataTableOutput('cytoscapeJsTable')
-                    #                 )
-                    #                 )
+
                     
-                    #                  mainPanel(dataTableOutput('cytoscapeJsTable') )      
-                    
-                    
-                    #                 mainPanel(div(id="cy"), htmlOutput("cytoscapeJsPlot"), dataTableOutput('cytoscapeJsTable'))      
                     
                   )
 ))
