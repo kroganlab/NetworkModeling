@@ -83,21 +83,21 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                       # The 'div(style="display:inline-block",)' portion simply allows the checkboxes to be displayed side by side, otherwise a new line will start for
                       # each line here.  
                       div( style="display:inline-block ; color:#FF0000" ,checkboxInput("H1N1_s", "H1N1", value = T)),
-                      div( style="display:inline-block ; color:#0000FF",checkboxInput("H3N2_s", "H3N2", value = FALSE)),
+                      div( style="display:inline-block ; color:#0000FF",checkboxInput("H3N2_s", "H3N2", value = F)),
                       div(style="display:inline-block ; color:#006600", checkboxInput("H5N1_s", "H5N1", value = F)),  
                       div(style="display:inline-block", checkboxInput("SOV", 
                           "Show unselected viruses that also occur on nodes in this network?", value = T)),  
                       if(6 > 0) {
-                        div(style="display:inline-block", checkboxInput("T1", textOutput('TP1') , value = T))
+                        div(style="display:inline-block", checkboxInput("T1", textOutput('TP1') , value = F))
                       } ,# }), # close reactive
                       if(6 > 1) {
-                        div(style="display:inline-block", checkboxInput("T2", textOutput('TP2'), value = F))
+                        div(style="display:inline-block", checkboxInput("T2", textOutput('TP2'), value = T))
                       },
                       if(6 > 2) {
                         div(style="display:inline-block" , checkboxInput("T3",  textOutput('TP3'), value = F))
                       },
                       if(6 > 3) {
-                        div(style="display:inline-block" , checkboxInput("T4", textOutput('TP4'), value = T))
+                        div(style="display:inline-block" , checkboxInput("T4", textOutput('TP4'), value = F))
                       },
                       if(6 > 4) {
                         div(style="display:inline-block" , checkboxInput("T5", textOutput('TP5'), value = F))
