@@ -13,11 +13,11 @@ shinyServer(function(input, output, session) {
                                    choices = c("HTBE" = 'HTBE', 
                                                "MDM" = 'MDM',
                                               "A549" = 'A549'), 
-                                   selected = 'htbe', multiple = F, selectize = F),
+                                   selected = 'HTBE', multiple = F, selectize = F),
            "mouse" =   selectInput("selectCELLTYPE", label = h6("Cell Type"), 
-                                   choices = c("Mouse Lung" = 'MOUSE_LUNG', 
-                                          "???" = 'mouse_lung1'), 
-                                   selected = 'MOUSE_LUNG' , multiple = F, selectize = F),
+                                   choices = c("Mouse Lung" = 'MOUSE_LUNG') , 
+ #                                         "???" = 'mouse_lung1'), 
+                                   selected = 'MOUSE_LUNG' , multiple = F, selectize = F)
     )  # close switch
   }) # close output$ui
 
@@ -96,7 +96,31 @@ shinyServer(function(input, output, session) {
   }) # close 'with progress - rfn'
   })
              
+  # initial error might be here in the sequence of things, maybe edge selectors (widgets) need to be fully prepopulated in the Ui in order for the 
+  # networking functions to grab the logic..  so maybe there is a 'null' loop then it keeps going and has what it needs?  Maybe use an observe statement somehow?
+  # prob work on that "Coerced" error though since there is a chance that one could be having an effect.
+  # observe({ print(network_object_react()[[1]][["edgeLegendData"]]) })
+   # browser()
   
+ # combined_edges <- reactive({ 
+    Omics_edges <- reactive({ edges_between_omics(Nodes =  nodeData()) })
+ #   combined_edges1 <-   reactive({ rbind(selected_edges(), Omics_edges()) })
+ #   LENGTH_OMICS <- reactive({length(Omics_edges())})
+#    if(LENGTH_OMICS == 0){
+#       combined_edges <- reactive({ selected_edges() })
+#    }
+    combined_edges <- reactive({ assemble_edges(selected_edges(), Omics_edges()) })
+    
+ # })
+  
+#   if(length(Omics_edges() > 0)){
+#     output <- combined_edges()
+#   }else{
+#     output <- selected_edges() 
+#   }
+#   output
+ 
+ #  combined_edges <- reactive({ selected_edges()})   
       edge_types <- reactive({ do.call("rbind",lapply(network_object_react(),function(x) x[["edgeLegendData"]])) })
   output$litL <- reactive({
     "literature" %in% edge_types()$tags_for_colors 
@@ -129,12 +153,7 @@ shinyServer(function(input, output, session) {
 #  outputOptions(output, "TP1", suspendWhenHidden=FALSE)
   ## here we'll add the interomics edges just before rendering
   
-  combined_edges <- reactive({ 
-    Omics_edges <- reactive({ edges_between_omics(Nodes =  nodeData()) })
-    combined_edges <-   reactive({ rbind(selected_edges(), Omics_edges()) })
- #   combined_edges <- reactive( {selected_edges() })
-    combined_edges()
-  })
+
   
   
   
@@ -148,21 +167,29 @@ shinyServer(function(input, output, session) {
  
   ##########
   withProgress(message = "Calculating", value = 0.1, {
-    # nodeData <- nodeData_highlight
-    output$cytoscapeJsPlot <-  renderPrint({ withProgress(message = "Generating Cytoscape.js", value = 0.8, {
-      cyNetwork <- reactive({ createCytoscapeNetwork(nodeData(), combined_edges()) })
-      cytoscapeJsSimpleNetwork2(cyNetwork()$nodes, cyNetwork()$edges, layout=input$layout)
+  
+    output$cytoscapeJsTable_nodes <-  DT::renderDataTable({ ns2T() }) 
+    output$cytoscapeJsTable_nodes_attributes <- 
+       DT::renderDataTable({ datatable(nodeData() )   }) 
+ 
+
+    output$cytoscapeJsPlot <-   renderPrint({ withProgress(message = "Generating Cytoscape.js", value = 0.8, {
+
+      cyNetwork <- createCytoscapeNetwork(nodeData(), combined_edges())
+#      cyNetwork <- createCytoscapeNetwork(nodeData(), selected_edges())
+
+      cytoscapeJsSimpleNetwork2(cyNetwork$nodes, cyNetwork$edges, layout=input$layout)
     }) # close withProgress Generating Cytoscape.js
     }) 
+    output$cytoscapeJsTable_edges <-    ({ DT::renderDataTable({ combined_edges() }) }) 
+#    }) # close cytoscapeJSplot 'reactive'
   })  ## close 'with progress'
   
   
-  output$cytoscapeJsTable_edges <- DT::renderDataTable({ combined_edges() })
-  output$cytoscapeJsTable_nodes <- DT::renderDataTable({ ns2T() })
-  output$cytoscapeJsTable_nodes_attributes <- 
-    DT::renderDataTable({ datatable(nodeData() )   })
-  
+ 
 
+
+  
   
 })
 

@@ -12,6 +12,55 @@ get_time <- function(DF1 = genomics_mouse){
   gm_subf
 }
 
+create.network1.1_pval <- function( DF1 = genomics_mouse,   Qval = .05,  LOG2FC = 2.0)
+{
+  # ; Qval = .1;  LOG2FC = 1.5
+  gm_subf <- DF1  # not if running manually.
+  gm_subf <- unique(gm_subf)
+  gm_subf <- gm_subf[!(is.na(gm_subf$entrez_id) == T & is.na(gm_subf$uniprot_ac) == T),]
+  gm_subf <- gm_subf[((gm_subf$q_value <= Qval) & ((gm_subf$log2fc <= -1*LOG2FC) | (gm_subf$log2fc >= LOG2FC ))), ]
+  #       CELL_LINE <- 'MDM' # 'A549, HTBE, MDM'
+  #       gm_subf <- gm_subf[gm_subf$cell_line == CELL_LINE, ]
+  gm_subf <- unique(gm_subf)
+  min_abs2 <- function(Y){
+    val <-  Y[which.max( abs(Y) )]
+    return(val)
+  }
+  
+  
+  # this line takes the worst fold change for entries from 2 or more experiments
+  
+  M <- aggregate(log2fc ~ entrez_id + strain + time + symbol + q_value, data = gm_subf[ , c('entrez_id', 'strain', 'time',  'symbol', 'log2fc', 'q_value')], min_abs2 )
+  
+  
+  
+  # time_points <<- sort(unique(gm_subf$time))
+  
+  # rm(gm_subf)
+  M <- unique(M); M <- M[M$strain != 'WSN' , ];  M <- data.table(M)
+  M <- unique(M)
+  
+  #     nrow(unique(M[ , c('entrez_id', 'strain', 'time',  'symbol', 'log2fc' )]))
+  
+  
+  #         tmp <- ddply(df2, .(id, cat), transform, newid = paste(id, seq_along(cat)))
+  #         # Aggregate using this newid and toss in the id so we don't lose it
+  #         out <- dcast(tmp, id + newid ~ cat, value.var = "val")
+  #         # Remove newid if we want
+  #         out <- out[,-which(colnames(out) == "newid")]
+  
+  
+  M[is.na(M$log2fc) , 'log2fc' ] <- 0
+  M2E <- M[1:3, ]; 
+  M2E[1, 'entrez_id'] <- 0; M2E[1, 'symbol'] <- 'fill - ignore';  M2E[1, 'strain'] <- 'H1N1'; M2E[1, 'log2fc'] <- 0.0
+  M2E[2, 'entrez_id'] <- 0; M2E[2, 'symbol'] <- 'fill - ignore';  M2E[2, 'strain'] <- 'H3N2';  M2E[2, 'log2fc'] <- 0.0
+  M2E[3, 'entrez_id'] <- 0; M2E[3, 'symbol'] <- 'fill - ignore';  M2E[3, 'strain'] <- 'H5N1';  M2E[3, 'log2fc'] <- 0.0
+  M <- rbind(M, M2E)
+  
+  # DF_reshape <- dcast(M, entrez_id + symbol + time ~ strain, value.var = 'log2fc'  )
+  DF_reshape <- dcast(M, entrez_id + symbol + time + log2fc ~ strain, value.var = 'q_value'  )
+  namedList(DF_reshape)
+}
 
 create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.0)
 {
@@ -241,33 +290,69 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   edge_list
 }
 
+# edges_between_omics <- function(Nodes){
+#   Nodes$colA <- Nodes$id
+#   Nodes$colB <- Nodes$id - (floor(Nodes$id/1000000000) * 1000000000)
+#   library(plyr)
+# #  colA <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
+# #  colB <- c(1,2,3,1,1,4,4,8,3,1,3,5,6,7)
+# #  DF <- data.frame(colA, colB)
+#   DF <- Nodes[ , c('colA', 'colB')]
+#   list_fa <- unique(DF[duplicated(DF$colB), 'colB' ])
+#   
+#   data1 <- list()
+#   for(i in 1:length(list_fa)){
+#     combination <- combn(DF[DF$colB == list_fa[[i]], "colA"], m = 2)
+#     data1[[i]] <- data.frame(source = combination[1,], target = combination[2,])
+#   }
+#   inter_omics_edges <- rbindlist(data1)
+#   inter_omics_edges <- as.data.frame((inter_omics_edges))
+#   inter_omics_edges$info_source <- "inter_omics"
+# #  inter_omics_edges$color <- "#FF00FF"
+#   inter_omics_edges$color <- "#000000"
+#   inter_omics_edges$thick <- 5.0
+#   inter_omics_edges <- inter_omics_edges[inter_omics_edges$source != inter_omics_edges$target, ] # remove self edges.
+#   inter_omics_edges <- unique(inter_omics_edges)
+#   inter_omics_edges
+# }
+
 edges_between_omics <- function(Nodes){
   Nodes$colA <- Nodes$id
   Nodes$colB <- Nodes$id - (floor(Nodes$id/1000000000) * 1000000000)
   library(plyr)
-#  colA <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
-#  colB <- c(1,2,3,1,1,4,4,8,3,1,3,5,6,7)
-#  DF <- data.frame(colA, colB)
+  #  colA <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
+  #  colB <- c(1,2,3,1,1,4,4,8,3,1,3,5,6,7)
+  #  DF <- data.frame(colA, colB)
   DF <- Nodes[ , c('colA', 'colB')]
   list_fa <- unique(DF[duplicated(DF$colB), 'colB' ])
-  
   data1 <- list()
-  for(i in 1:length(list_fa)){
-    combination <- combn(DF[DF$colB == list_fa[[i]], "colA"], m = 2)
-    data1[[i]] <- data.frame(source = combination[1,], target = combination[2,])
+  if(length(list_fa) > 0){
+    for(i in 1:length(list_fa)){
+      combination <- combn(DF[DF$colB == list_fa[[i]], "colA"], m = 2)
+      data1[[i]] <- data.frame(source = combination[1,], target = combination[2,])
+    }
   }
   inter_omics_edges <- rbindlist(data1)
-  inter_omics_edges <- as.data.frame((inter_omics_edges))
-  inter_omics_edges$info_source <- "inter_omics"
-#  inter_omics_edges$color <- "#FF00FF"
-  inter_omics_edges$color <- "#000000"
-  inter_omics_edges$thick <- 5.0
-  inter_omics_edges <- inter_omics_edges[inter_omics_edges$source != inter_omics_edges$target, ] # remove self edges.
-  inter_omics_edges <- unique(inter_omics_edges)
+  if(length(list_fa) > 0){    
+    inter_omics_edges <- as.data.frame((inter_omics_edges))
+    inter_omics_edges$info_source <- "inter_omics"
+    #  inter_omics_edges$color <- "#FF00FF"
+    inter_omics_edges$color <- "#000000"
+    inter_omics_edges$thick <- 5.0
+    inter_omics_edges <- inter_omics_edges[inter_omics_edges$source != inter_omics_edges$target, ] # remove self edges.
+    inter_omics_edges <- unique(inter_omics_edges)
+  }
   inter_omics_edges
 }
 
-
+assemble_edges <- function(selected_edges, Omics_edges){
+  if(length(Omics_edges) > 0){
+    output <- rbind(selected_edges, Omics_edges)
+  }else{
+    output <- selected_edges
+  }
+  output
+}
 
 remove_free_nodes <- function(rN_ne, nodes, edges, node_id_colname){
   if(rN_ne){
