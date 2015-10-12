@@ -180,11 +180,11 @@ cluster_enrichment.main <- function(dat, out_file, org){
   kegg = getKEGGTerms()
   
   # Clean up the id's and convert to human id's to match with kegg
-  dat = clean_ids(dat, org)
-  names(dat)[grep('id', names(dat))] = 'entrez_id'
+  dat.labeled = clean_ids(dat, org)
+  names(dat.labeled)[grep('id', names(dat.labeled))] = 'entrez_id'
   
   # Get kegg id's associated with each entrez_id
-  dat.kegg = merge(dat, kegg, by.x='entrez_id', by.y='gene_id')
+  dat.kegg = merge(dat.labeled, kegg, by.x='entrez_id', by.y='gene_id')
   
   # check for pathway enrichment in the clusters
   dat.results = clusterEnrichment(dat.kegg, ngenes, kegg)
@@ -197,7 +197,16 @@ cluster_enrichment.main <- function(dat, out_file, org){
   # list gene names in data in each pathway
   gene_names = aggregate(data=dat.kegg, SYMBOL~path_id, FUN=function(y){paste(unique(y), collapse=',')})
   dat.results = merge(dat.results, gene_names, by='path_id')
-  # re-order the results
+  
+  # get POSSIBLE metabolites in pathway (basically a list of what clusters the diff metabolites show up in)
+  dat$dataset = gsub('\\|\\|\\|.*','',dat$labels)
+  dat$id = gsub('.*\\|\\|\\|','',dat$labels)
+  metabolites = aggregate(data=dat[dat$dataset=='MET',], id~cluster, FUN=function(y){paste(unique(y), collapse=',')})
+  names(metabolites)[2] = "possible_metabolite_members"
+  dat.results = merge(dat.results, metabolites, by='cluster', all.x=T)
+  
+  
+  # re-order and write out the results
   dat.results = dat.results[order(dat.results$cluster, dat.results$p_val),]
   out_file = gsub('.pdf', '_clusterEnrichment.txt', out_file)
   write.table(dat.results, out_file, quote=F, row.names=F, sep='\t')
