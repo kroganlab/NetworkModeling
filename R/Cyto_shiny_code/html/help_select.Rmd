@@ -15,6 +15,12 @@ For best results in terms of web tool speed, keep main display on some tab other
 
 The Primary QVAL and Fold change sliders are used to filter out data,  Only nodes with a lower Qval or a higher Fold change than the user selected value are displayed.
 
+**Data Selection and Combinations**
+
+Only one species - Human or Mouse - can be shown at a time.  Only one cell type can be selected.  Multiple "Omics" can be selected. to remove an 'omics' simply backspace or delete the selection in the dropdown.  When selecting new data, it is always a good idea to have the main view on the "Nodes", "Nodes_attr" or "Edges" tab since the "CytoscapeJS" plot takes a while to render and if there is no data for your corresponding selection CytoscapeJS will not change whereas the other data table tab views will.  If any of the three table tabs ("Nodes", "Nodes_attr" or "Edges") are blank that means there are no nodes with edges found for that selection.  Note that for anything to be displayed on the CytoscapeJS plot there must be edges.  IF Nodes but no Edges exist for a given selection they can be viewed in the Nodes tab.
+
+One curent bug is that if say 2 omics data types are selected and there is data for one but not the other than an error is generated and nothing is plotted.  Try removing one or the other (iteratively) of the Omics data types to see if Nodes are are generated for some lesser combination.  It is always best to start by searching one omics data base with one virus and one time point and then add either one omics data set or one time point or one virus at a time.  
+
 **Virus and Time Points**
 
 Use the check boxes to select which viruses to view and to select which time points for the data. The nodes are the genes or proteins on which the virus is associated.  The edge connections between the nodes indicate known associations between the nodes.  

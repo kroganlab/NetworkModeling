@@ -56,7 +56,6 @@ create.network1.1_pval <- function( DF1 = genomics_mouse,   Qval = .05,  LOG2FC 
   M2E[2, 'entrez_id'] <- 0; M2E[2, 'symbol'] <- 'fill - ignore';  M2E[2, 'strain'] <- 'H3N2';  M2E[2, 'log2fc'] <- 0.0
   M2E[3, 'entrez_id'] <- 0; M2E[3, 'symbol'] <- 'fill - ignore';  M2E[3, 'strain'] <- 'H5N1';  M2E[3, 'log2fc'] <- 0.0
   M <- rbind(M, M2E)
-  
   # DF_reshape <- dcast(M, entrez_id + symbol + time ~ strain, value.var = 'log2fc'  )
   DF_reshape <- dcast(M, entrez_id + symbol + time + log2fc ~ strain, value.var = 'q_value'  )
   namedList(DF_reshape)

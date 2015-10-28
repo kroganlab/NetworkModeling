@@ -18,12 +18,12 @@ source("./Linked_subdirectories/R_to_Cyjs_wrapper_functions/CCN2_pie.R")
 source("./Linked_subdirectories/R_to_Cyjs_wrapper_functions/cytoscapeJsSimpleNetwork3_strain.R")
 # These are R functions used here in this shiny app but generic enough for non-shiny networking applications their uses 
 # are found in "Create_Flu_nework#.R"    
-source("./Linked_subdirectories/R_functions/FUNC_for_example_genomics3.R")
+source("./Linked_subdirectories/R_functions_2/FUNC_for_example_genomics3.R")
 # all data is read in here.
 source("Linked_subdirectories/data/model_data_read.R")
 # This is the workhorse R script where the node and edge selections are made along with attributes, colors, shapes. Output from here is 
 # used by CCN2_pie.R.
-source("./Linked_subdirectories/R_functions/Create_Flu_network6.R")
+source("./Linked_subdirectories/R_functions_2/Create_Flu_network6.R")
 #load("./Linked_subdirectories/data/human_rnaseq_data")
 
 # DF1 <<- get_time(genomics_mouse)
@@ -71,11 +71,15 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                                   selected = 'mouse'),
                       # This outputs the dynamic UI component
                       uiOutput("ui1"),
-                      selectInput("selectOMICS", label = h6
-                              ("OMICS-type"),
-                                  choices = list("PROTEOMICS" = 'proteomics', "GENOMICS" = 'genomics',
-                                                 'METABOLOMICS' = 'metabolomics'), 
-                                  selected = 'genomics', multiple = T),
+                      ###### new stuff
+                      uiOutput("ui2"),
+                      ###### old stuff
+#                       selectInput("selectOMICS", label = h6
+#                               ("OMICS-type"),
+#                                   choices = list("PROTEOMICS" = 'proteomics', "GENOMICS" = 'genomics',
+#                                                  'METABOLOMICS' = 'metabolomics'), 
+#                                   selected = 'genomics', multiple = T),
+                  
                       sliderInput("q_value", "primary QVAL:", min=.001, max=.1, value=.05),
                       sliderInput("log2FC", "Fold Change:", min=1.5 , max=6.0, value=2.0),
                       div( style="display:inline-block ; color:#FF0000" ,
@@ -86,7 +90,7 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                       div( style="display:inline-block ; color:#0000FF",checkboxInput("H3N2_s", "H3N2", value = F)),
                       div(style="display:inline-block ; color:#006600", checkboxInput("H5N1_s", "H5N1", value = F)),  
                       div(style="display:inline-block", checkboxInput("SOV", 
-                          "Show unselected viruses that also occur on nodes in this network?", value = T)),  
+                          "Show unselected viruses that also occur on nodes in this network?", value = F)),  
                       if(6 > 0) {
                         div(style="display:inline-block", checkboxInput("T1", textOutput('TP1') , value = F))
                       } ,# }), # close reactive

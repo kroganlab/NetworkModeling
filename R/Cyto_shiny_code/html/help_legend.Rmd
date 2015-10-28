@@ -8,15 +8,25 @@ output:
     toc_depth: 0
 ---
 
-!["Caption for the picture."](genes.png)
+##  ##
+
+!["Caption for the picture."](omics.tiff)
 
 **Colors, shapes and sizes**
 
-The size of the node corresponds to the fold change value for that node.  Where there is more that one virus and or time point for a given node, the size defaults to the smallest.   The sign of the fold change value is indicated by the outline color for the name on the node: White for positive and Orange for Negative.  This means that as the slider for the fold change cut off value is changed, the same node on the plot may get larger or smaller depending on which viruses and time points meet the selection criteria and what their fold change values are for that node.  Fo unambiguity in the sign and size, choose only one virus, one time point and leave "Show unselected viruses that also occur on nodes in this network?" unchecked.
+The size of the node corresponds to the fold change value for that node.  Where there is more that one virus and or time point for a given node, the size defaults to the smallest value.   The sign of the fold change is indicated by the outline color for the name on the node: White for positive and Orange for Negative.  This means that as the slider for the fold change cut off value is changed, the same node on the plot may get larger or smaller depending on which viruses and time points meet the selection criteria and what their fold change values are for that node.  Fo unambiguity in the sign and size, choose only one virus, one time point and leave "Show unselected viruses that also occur on nodes in this network?" unchecked.
 
-Green, red and blue are used as node colors to indicate the corresponding virus(es) for the nodes.  The shape of the node indicates what kind of entity it is:  gene = round, protein = hexagon (more will be addeds)
+Green, red and blue are used as node colors to indicate the corresponding virus(es) for the nodes.  The shape of the node indicates what kind of entity it is:  circles are used to indicate genomic nodes, hexagons are used to indicate proteomic nodes and triangles are used to indicate metabolomic nodes. 
 
-The edges are color coded to checkboxes and labels in the user selection pane.
+The thin edges connecting nodes of the same type (i.e genomic to genomic) are color coded to the checkboxes and labels in the user selection panel.  Thicker black edges are used to connect nodes of different types (genomic, metabolomic) that have the same entrez id.
+
+As an example, in the example picture shown, the large hexagon node with the lighter red interior labeled "ISG15" is a proteomic node (because it is a hexagon), is found for the 'H1N1' virus because it is red and has a larger fold change value (just judging by its relative size to other nodes in the picture) and its fold change value is positive (because the border on the label ISG15 is white). It has a thicker black edge connection to a round node (round = genomic) at the bottom of the picture.  This genomic node for "Isg15" shows that it occurs for H1N1 (because half of it is red) and H5N1 (because half is green).  For comparison, the "Serpina3K" genomic node to the left of center also shows red for H1N1 and green for H5N1 but the darker red and green colors indicate that they are initially found at earler time points.  Also the orange border on the label indicates that the fold change value is negative.
+
+To find more information on the node one can search the tables in tabs "Nodes", "Nodes_attr", and Edges.  The number of rows in the "Nodes_attr" table is the same as the number of nodes shown on the CytoscapeJS plot.   This table is a the data that is used to creat the CytoscapeJS plot.  There can be (and typically are) more rows in the table on the "Nodes" tab than in the CytoscapeJS network plot because each node which has information for more than one time point will have 2 or more entries in the table here, but will only show the earlier time point (by shade of color) on the node in the CytoscapeJS plot.  The values in the H1N1, H3N2 and H5N1 columns (on the Nodes tab) are the log 2 fold change values.  
+
+Much of the information (values, character strings) in the Nodes_attr tab/table is used for the CytoscapeJS plot and so in many cases is an arbitrarily scaled value based on the actual values in the Nodes tab.   
+
+The "Edges" tab contains the entez_id's of the nodes which they connect ('source' and 'target' column names of entrez ids are needed by the CytoscapeJS javascript logic but have no meaning in this context since they are interchangeable for this data.  To keep track of the different 'Omics' entities 1billion, 2 billion etc are added to each entrez id.  
 
 Still confused?  shoot us an email at fluomics.modeling@gmail.com 
 

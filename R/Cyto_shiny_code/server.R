@@ -5,7 +5,7 @@ shinyServer(function(input, output, session) {
   # observe({ 
   output$ui1 <-  renderUI({
     if (is.null(input$selectSPECIES))
-      return()
+      return('mouse')
     # Depending on input$input_type, we'll generate a different
     # UI component and send it to the client.
     switch(input$selectSPECIES,
@@ -20,8 +20,42 @@ shinyServer(function(input, output, session) {
                                    selected = 'MOUSE_LUNG' , multiple = F, selectize = F)
     )  # close switch
   }) # close output$ui
+  
+  output$ui2 <-  renderUI({
+    if (is.null(input$selectSPECIES)){
+      return('mouse')
+    }
+    # Depending on input$input_type, we'll generate a different
+    # UI component and send it to the client.
+    switch(input$selectSPECIES,
+           "human" =   selectInput("selectOMICS", label = h6("OMICS Type"), 
+                                 choices = list("PROTEOMICS" = 'proteomics', 
+                                                "GENOMICS" = 'genomics'), 
+                                   selected = 'genomics', multiple = T),
+           "mouse" =   selectInput("selectOMICS", label = h6("OMICS Type"), 
+                                   choices = list("PROTEOMICS" = 'proteomics', "GENOMICS" = 'genomics',
+                                                  'METABOLOMICS' = 'metabolomics'), 
+                                   selected = 'genomics', multiple = T)
+    )  # close switch
+  }) # close output$ui
+  
+  ## add in renderUI for omics types
+  
+  #                       selectInput("selectOMICS", label = h6
+  #                               ("OMICS-type"),
+  #                                   choices = list("PROTEOMICS" = 'proteomics', "GENOMICS" = 'genomics',
+  #                                                  'METABOLOMICS' = 'metabolomics'), 
+  #                                   selected = 'genomics', multiple = T),
+  
+  ###########
 
   DF1list <- reactive({  
+    if (is.null(input$selectOMICS)){
+        return('genomics')
+    }
+    if (is.null(input$selectSPECIES)){
+      return('mouse')
+    }
     dataname <- paste0(input$selectOMICS, "_", input$selectSPECIES)
     data_list <- list(); identity_attribute_list <- list()
     for(i in 1: length(dataname)){
@@ -82,17 +116,20 @@ shinyServer(function(input, output, session) {
   }) # close 'with progress - selecting edges'
   }) # close reactive for edge selection
   
+       Omics_edges <- reactive({ edges_between_omics(Nodes =  do.call("rbind",lapply(network_object_react(),function(x) x[["AllNodes"]]))) })
+  # 
+       combined_edges <- reactive({ assemble_edges(selected_edges(), Omics_edges()) })
   
   nodeData <- reactive({ withProgress(message = "Removing Free Nodes", value = 0.7, 
                                     #  {remove_free_nodes(rN_ne = input$RN_ne, nodes = network_object_react()[[1]][['AllNodes']] ,
                                     {remove_free_nodes(rN_ne = input$RN_ne, nodes =  
                                                          do.call("rbind",lapply(network_object_react(),function(x) x[["AllNodes"]])),
-                                                         edges = selected_edges(),  node_id_colname = 'id')
+                                                         edges = combined_edges(),  node_id_colname = 'id')
   }) # close 'with progress - rfn'
   })
   ns2T <- reactive({ withProgress(message = "Removing Free Nodes", value = 0.7, {remove_free_nodes(rN_ne = input$RN_ne, 
                                     nodes = do.call("rbind",lapply(network_object_react(),function(x) x[["ns2_display"]])), 
-                                    edges = selected_edges(),  node_id_colname = "id")
+                                    edges = combined_edges(),  node_id_colname = "id")
   }) # close 'with progress - rfn'
   })
              
@@ -102,23 +139,10 @@ shinyServer(function(input, output, session) {
   # observe({ print(network_object_react()[[1]][["edgeLegendData"]]) })
    # browser()
   
- # combined_edges <- reactive({ 
-    Omics_edges <- reactive({ edges_between_omics(Nodes =  nodeData()) })
- #   combined_edges1 <-   reactive({ rbind(selected_edges(), Omics_edges()) })
- #   LENGTH_OMICS <- reactive({length(Omics_edges())})
-#    if(LENGTH_OMICS == 0){
-#       combined_edges <- reactive({ selected_edges() })
-#    }
-    combined_edges <- reactive({ assemble_edges(selected_edges(), Omics_edges()) })
+#     Omics_edges <- reactive({ edges_between_omics(Nodes =  nodeData()) })
+# 
+#     combined_edges <- reactive({ assemble_edges(selected_edges(), Omics_edges()) })
     
- # })
-  
-#   if(length(Omics_edges() > 0)){
-#     output <- combined_edges()
-#   }else{
-#     output <- selected_edges() 
-#   }
-#   output
  
  #  combined_edges <- reactive({ selected_edges()})   
       edge_types <- reactive({ do.call("rbind",lapply(network_object_react(),function(x) x[["edgeLegendData"]])) })
@@ -164,15 +188,16 @@ shinyServer(function(input, output, session) {
 #  output$cytoscapeJsTable_nodes <- DT::renderDataTable({ ns2T() })
 #  output$cytoscapeJsTable_nodes_attributes <- 
 #    DT::renderDataTable({ datatable(nodeData() )   })
- 
+  
   ##########
   withProgress(message = "Calculating", value = 0.1, {
-  
+ 
     output$cytoscapeJsTable_nodes <-  DT::renderDataTable({ ns2T() }) 
+    
     output$cytoscapeJsTable_nodes_attributes <- 
        DT::renderDataTable({ datatable(nodeData() )   }) 
  
-
+    
     output$cytoscapeJsPlot <-   renderPrint({ withProgress(message = "Generating Cytoscape.js", value = 0.8, {
 
       cyNetwork <- createCytoscapeNetwork(nodeData(), combined_edges())
