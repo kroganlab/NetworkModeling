@@ -12,54 +12,6 @@ get_time <- function(DF1 = genomics_mouse){
   gm_subf
 }
 
-create.network1.1_pval <- function( DF1 = genomics_mouse,   Qval = .05,  LOG2FC = 2.0)
-{
-  # ; Qval = .1;  LOG2FC = 1.5
-  gm_subf <- DF1  # not if running manually.
-  gm_subf <- unique(gm_subf)
-  gm_subf <- gm_subf[!(is.na(gm_subf$entrez_id) == T & is.na(gm_subf$uniprot_ac) == T),]
-  gm_subf <- gm_subf[((gm_subf$q_value <= Qval) & ((gm_subf$log2fc <= -1*LOG2FC) | (gm_subf$log2fc >= LOG2FC ))), ]
-  #       CELL_LINE <- 'MDM' # 'A549, HTBE, MDM'
-  #       gm_subf <- gm_subf[gm_subf$cell_line == CELL_LINE, ]
-  gm_subf <- unique(gm_subf)
-  min_abs2 <- function(Y){
-    val <-  Y[which.max( abs(Y) )]
-    return(val)
-  }
-  
-  
-  # this line takes the worst fold change for entries from 2 or more experiments
-  
-  M <- aggregate(log2fc ~ entrez_id + strain + time + symbol + q_value, data = gm_subf[ , c('entrez_id', 'strain', 'time',  'symbol', 'log2fc', 'q_value')], min_abs2 )
-  
-  
-  
-  # time_points <<- sort(unique(gm_subf$time))
-  
-  # rm(gm_subf)
-  M <- unique(M); M <- M[M$strain != 'WSN' , ];  M <- data.table(M)
-  M <- unique(M)
-  
-  #     nrow(unique(M[ , c('entrez_id', 'strain', 'time',  'symbol', 'log2fc' )]))
-  
-  
-  #         tmp <- ddply(df2, .(id, cat), transform, newid = paste(id, seq_along(cat)))
-  #         # Aggregate using this newid and toss in the id so we don't lose it
-  #         out <- dcast(tmp, id + newid ~ cat, value.var = "val")
-  #         # Remove newid if we want
-  #         out <- out[,-which(colnames(out) == "newid")]
-  
-  
-  M[is.na(M$log2fc) , 'log2fc' ] <- 0
-  M2E <- M[1:3, ]; 
-  M2E[1, 'entrez_id'] <- 0; M2E[1, 'symbol'] <- 'fill - ignore';  M2E[1, 'strain'] <- 'H1N1'; M2E[1, 'log2fc'] <- 0.0
-  M2E[2, 'entrez_id'] <- 0; M2E[2, 'symbol'] <- 'fill - ignore';  M2E[2, 'strain'] <- 'H3N2';  M2E[2, 'log2fc'] <- 0.0
-  M2E[3, 'entrez_id'] <- 0; M2E[3, 'symbol'] <- 'fill - ignore';  M2E[3, 'strain'] <- 'H5N1';  M2E[3, 'log2fc'] <- 0.0
-  M <- rbind(M, M2E)
-  # DF_reshape <- dcast(M, entrez_id + symbol + time ~ strain, value.var = 'log2fc'  )
-  DF_reshape <- dcast(M, entrez_id + symbol + time + log2fc ~ strain, value.var = 'q_value'  )
-  namedList(DF_reshape)
-}
 
 create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.0)
 {
@@ -71,13 +23,15 @@ create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.
   #       CELL_LINE <- 'MDM' # 'A549, HTBE, MDM'
   #       gm_subf <- gm_subf[gm_subf$cell_line == CELL_LINE, ]
   gm_subf <- unique(gm_subf)
+  
+  # the following function is used by the aggregate command to find the worst fold change for entries from 2 or more experiments.
+  
         min_abs2 <- function(Y){
           val <-  Y[which.max( abs(Y) )]
           return(val)
         }
   
   
-  # this line takes the worst fold change for entries from 2 or more experiments
   
   M <- aggregate(log2fc ~ entrez_id + strain + time + symbol, data = gm_subf[ , c('entrez_id', 'strain', 'time',  'symbol', 'log2fc')], min_abs2 )
   
@@ -87,17 +41,13 @@ create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.
   M <- unique(M); M <- M[M$strain != 'WSN' , ];  M <- data.table(M)
   M <- unique(M)
   
-  #     nrow(unique(M[ , c('entrez_id', 'strain', 'time',  'symbol', 'log2fc' )]))
-  
-  
-  #         tmp <- ddply(df2, .(id, cat), transform, newid = paste(id, seq_along(cat)))
-  #         # Aggregate using this newid and toss in the id so we don't lose it
-  #         out <- dcast(tmp, id + newid ~ cat, value.var = "val")
-  #         # Remove newid if we want
-  #         out <- out[,-which(colnames(out) == "newid")]
+
   
   
   M[is.na(M$log2fc) , 'log2fc' ] <- 0
+  
+  # M2E is created to make sure all 3 viruses are present in the data set before it is reshaped (dcast).  This way the next function will work properly.  These added rows don't
+  # show up in the final plot or data tables - they just simply keep everything working properly.
   M2E <- M[1:3, ]; 
   M2E[1, 'entrez_id'] <- 0; M2E[1, 'symbol'] <- 'fill - ignore';  M2E[1, 'strain'] <- 'H1N1'; M2E[1, 'log2fc'] <- 0.0
   M2E[2, 'entrez_id'] <- 0; M2E[2, 'symbol'] <- 'fill - ignore';  M2E[2, 'strain'] <- 'H3N2';  M2E[2, 'log2fc'] <- 0.0
@@ -110,7 +60,7 @@ create.network1.1 <- function( DF1 = genomics_mouse,   Qval = .001,  LOG2FC = 2.
 
 
 
-# for human
+# this is the main workhorse function.  time and virus selections are made but most of the work is done for the pie color chart on the nodes.
 create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
                                h1n1s = F, h3n2s = F, h5n1s = F, map = Mouse_map,
                                T1 = F, T2 = F, T3 = F, T4 = F, T5 = F, T6 = F, T7 = F, T8 = F, time_points,
@@ -128,6 +78,9 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   if(T5 == T){ t5 <- time_points[5]}
   DF <- DF3  
   max_time <- max(as.numeric(unique(substr(DF$time, 1,2))))
+  
+  
+  # This set of if statements simply sets columns equal to zero for any virues not chosen if 'show other viruses' = F.
   if(Show_other_viruses == F){
     if(h1n1s == F){
       DF$H1N1 <- 0
@@ -155,15 +108,17 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   # for attributes (size of node based on fold change) 
   
   ## logic to remove or keep 'unselected' virus strains that occur for the same genes at the same chosen time points. 
-  ## The node is still there, (i.e now rows are removed)  its just 
+  ## The node is still there, (i.e no rows are removed)  
   
   ns3 <- ns2
   # rm(ns1,ns2) # save ns2 for output
   rm(ns1)
   names(ns2_display)[names(ns2_display)=='entrez_id'] <- "id"; names(ns2_display)[names(ns2_display)=='symbol'] <- "name"
   names(ns3)[names(ns3)=='entrez_id'] <- "id"; names(ns3)[names(ns3)=='symbol'] <- "name"
-  #      names(ns3)[names(ns3)=='time'] <- "time"
-  #             colnames(ns3)[ 'entrez_id'] <- "id"; colnames(ns3)[2] <- "time"; colnames(ns3)[2] <- "name"
+  
+  # the following lines are setting up the columns 'h1n1_time' which will ultimately be used to shade the color of the node (or pie portion of the node)
+  # for the appropriate time.  
+ 
   ns3$time <- as.numeric(substr(ns3$time, 1,2)) 
   ns3$h1n1_time <- (ns3$H1N1)*ns3$time; ns3$h3n2_time <- (ns3$H3N2)*ns3$time
   ns3$h5n1_time <- (ns3$H5N1)*ns3$time
@@ -177,11 +132,15 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   ns2_display$name_id <- paste0(ns2_display$name, "_", ns2_display$id)
   ns2_display3 <- ns2_display[,colnames(ns2_display[ , !names(ns2_display) %in% c("egg", "WSN", 'time')])] 
   
+  # This line finds the earliest time point so that the shading of the color on the node reflects that earlier time point.
   ns3_h1n1min <- aggregate(h1n1_time ~ name_id, data = ns3, min )
+  # the next two lines simply result in a '1' if something exists for that omics entity (name_id) for that viurs
   ns3_h1n1sum <- aggregate(H1N1 ~ name_id, data = ns3, sum )
   ns3_h1n1sum[ns3_h1n1sum$H1N1 > 0, "H1N1" ] = 1
+  # the following line fills in the appropriate value for node color shading.
   ns3_h1n1_m_s <- merge(ns3_h1n1min, ns3_h1n1sum, by = 'name_id')
   
+  # same thing for the remaining viruses.
   ns3_h3n2min <- aggregate(h3n2_time~ name_id, data = ns3, min )
   ns3_h3n2sum <- aggregate(H3N2 ~ name_id, data = ns3, sum )
   ns3_h3n2sum[ns3_h3n2sum$H3N2 > 0, "H3N2" ] = 1
@@ -289,31 +248,7 @@ create.network2.2 <- function( DF3 = DF_reshape,  #  Qval = .001,  LOG2FC = 2.0,
   edge_list
 }
 
-# edges_between_omics <- function(Nodes){
-#   Nodes$colA <- Nodes$id
-#   Nodes$colB <- Nodes$id - (floor(Nodes$id/1000000000) * 1000000000)
-#   library(plyr)
-# #  colA <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
-# #  colB <- c(1,2,3,1,1,4,4,8,3,1,3,5,6,7)
-# #  DF <- data.frame(colA, colB)
-#   DF <- Nodes[ , c('colA', 'colB')]
-#   list_fa <- unique(DF[duplicated(DF$colB), 'colB' ])
-#   
-#   data1 <- list()
-#   for(i in 1:length(list_fa)){
-#     combination <- combn(DF[DF$colB == list_fa[[i]], "colA"], m = 2)
-#     data1[[i]] <- data.frame(source = combination[1,], target = combination[2,])
-#   }
-#   inter_omics_edges <- rbindlist(data1)
-#   inter_omics_edges <- as.data.frame((inter_omics_edges))
-#   inter_omics_edges$info_source <- "inter_omics"
-# #  inter_omics_edges$color <- "#FF00FF"
-#   inter_omics_edges$color <- "#000000"
-#   inter_omics_edges$thick <- 5.0
-#   inter_omics_edges <- inter_omics_edges[inter_omics_edges$source != inter_omics_edges$target, ] # remove self edges.
-#   inter_omics_edges <- unique(inter_omics_edges)
-#   inter_omics_edges
-# }
+
 
 edges_between_omics <- function(Nodes){
   Nodes$colA <- Nodes$id

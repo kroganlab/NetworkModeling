@@ -1,8 +1,29 @@
 cytoscapeJsSimpleNetwork2 <- function(nodeEntries, edgeEntries, 
          standAlone=FALSE, layout="cose", data_shape = 'ellipse', 
-         #                                    height=600, width=600, injectCode="") {
-#         height=700, width=800, injectCode="") {
-  height=900, width=1100, injectCode="") {
+#  height=900, width=1100, injectCode="") {
+  plot_size = "medium", injectCode="") {
+  switch(plot_size,
+    small={
+      height <- 700
+      width <- 900
+    },
+    medium={
+      height <- 900
+      width <- 1100
+    },
+    large={
+      height <- 1200
+      width <- 1700
+    },
+    xlarge={
+      height <- 1300
+      width <- 2000
+    }
+         ) # end switch
+  
+#  "1300x2000" = 'ex-large'), 
+#  height <- 400
+#  width <- 500
     # Create webpage
     PageHeader <- "
     <!DOCTYPE html>

@@ -1,9 +1,15 @@
 
 #setwd("~/Box Sync/Doug/projects/FLU_Networking_code/Cyto_shiny_dev_generic_data_mult_2")
 #devtools::install_github('rstudio/DT')
+#install.packages('devtools')
+#devtools::install_github('rstudio/rsconnect')
+#library(rsconnect)
+#install.packages('packrat', type = 'source')
+# rsconnect::setAccountInfo(name='kroganqb3',  token='<TOKEN>',    secret='<SECRET')
 
 #install.packages("shiny", repos=c("http://rstudio.org/_packages", "http://cran.rstudio.com")) 
 #update.packages(ask = FALSE)
+require("rmarkdown")
 library(shiny)
 library(shinythemes)
 library('data.table')
@@ -24,19 +30,8 @@ source("Linked_subdirectories/data/model_data_read.R")
 # This is the workhorse R script where the node and edge selections are made along with attributes, colors, shapes. Output from here is 
 # used by CCN2_pie.R.
 source("./Linked_subdirectories/R_functions_2/Create_Flu_network6.R")
-#load("./Linked_subdirectories/data/human_rnaseq_data")
-
-# DF1 <<- get_time(genomics_mouse)
-# time_points <<- sort(unique(DF1$time))
 
 
-
-# These will be needed when subnetworking is done.  
-#library(BioNet)
-#library(DLBCL)
-#library(igraph)
-# themes = cerulean, flatly, default, journal, readable, spacelab, united
-#(theme = "bootstrap.css",
 shinyUI(fluidPage(theme = shinytheme("readable"), 
                   tags$style(type="text/css",
                              ".shiny-output-error { visibility: hidden; }",
@@ -65,7 +60,7 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                         tags$style(type='text/css', ".well { max-width: 330px; }"),
                         tags$style(type='text/css', ".span4 { max-width: 230px; }")
                       ),
-                      width=3, 
+                      width=2, 
                       selectInput("selectSPECIES", label = h6("SPECIES"),
                                   choices = list("HUMAN" = 'human', "MOUSE" = 'mouse'), 
                                   selected = 'mouse'),
@@ -106,21 +101,8 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                       if(6 > 4) {
                         div(style="display:inline-block" , checkboxInput("T5", textOutput('TP5'), value = F))
                       },
-                      #                      if(6 > 5) {
-                      #                              div(style="display:inline-block", checkboxInput("T6", output.Time_Points()[6], value = F))
-                      #                      },
-                      #                      if(length(time_points) > 6) {
-                      #                              div(style="display:inline-block" , checkboxInput("T7", output.Time_Points()[7], value = F))
-                      #                      },
-                      #                      if(length(time_points) > 7) {
-                      #                              div(style="display:inline-block" , checkboxInput("T8", output.Time_Points()[8], value = F))
-                      #                      },    
-                      
                       div(style="display:inline-block",checkboxInput("RN_ne", "Remove Nodes without Edges", value = TRUE)),
                       
-                      
-                      #      submitButton("Update Network"),
-                      #            checkboxInput("addLinks", "Add Links on Nodes?", TRUE)
                       div(style="display:inline-block",
                           h5("Uncheck to de-select Edge types: ", align = "left")),
                       # c("literature","metabolic","binary","regulatory","complexes","kinase","signaling")
@@ -171,9 +153,17 @@ shinyUI(fluidPage(theme = shinytheme("readable"),
                                   choices=c("grid", "random", "circle", "cose"), 
                                   
                                   selected="cose", 
-                                  multiple=FALSE)
+                                  multiple=FALSE),
+                        selectInput("CyJS_size", "CytoscapeJS Plot Size:", 
+                                    choices=list("700x9000" = 'small' , "900x1100" = 'medium', "1100x1700" = 'large',
+                                                 "1250x1900" = 'xlarge'), 
+                                  selected="medium", 
+                                    multiple=FALSE)
                       
                     ),
+
+#                                   choices = list("PROTEOMICS" = 'proteomics', "GENOMICS" = 'genomics',
+#                                                  'METABOLOMICS' = 'metabolomics'), 
                     
                     mainPanel( # div(id="cy"),
                       tabsetPanel(

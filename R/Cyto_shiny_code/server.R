@@ -6,7 +6,7 @@ shinyServer(function(input, output, session) {
   output$ui1 <-  renderUI({
     if (is.null(input$selectSPECIES))
       return('mouse')
-    # Depending on input$input_type, we'll generate a different
+    # Depending on input$input_type (in this case: which species), we'll generate a different
     # UI component and send it to the client.
     switch(input$selectSPECIES,
            "human" =   selectInput("selectCELLTYPE", label = h6("Cell Type"), 
@@ -56,6 +56,9 @@ shinyServer(function(input, output, session) {
     if (is.null(input$selectSPECIES)){
       return('mouse')
     }
+    # so the 'dataname' below simply pastes the selected 'OMICS' type and "SPECIES" type name together and is then that is the r object (which I 
+    # named to match up for convienence) if multiple data sets are selected (say genomics AND proteomics) then they are put together in a si
+ 
     dataname <- paste0(input$selectOMICS, "_", input$selectSPECIES)
     data_list <- list(); identity_attribute_list <- list()
     for(i in 1: length(dataname)){
@@ -64,13 +67,14 @@ shinyServer(function(input, output, session) {
       data_list[[i]] <- data1
       identity_attribute_list[[i]] <- input$selectOMICS[i]
     }
-  #  data <- data_list[[1]]
+  #  DF1list contains the list of r object names corresponding to the data sets used (species, omics, cell type etc) the MAP is used for the edges (different for human or mouse lung)
+  #  the identitiy attribute list just passes along the name of the omics type (per each data set) to the function.
     MAP <- get(paste0(input$selectSPECIES, "_map"))
      DF1list <- namedList(data_list, MAP, identity_attribute_list)
   })
   
   ############
- # Time_Points <-  reactive({ sort(unique(DF1list()[["data"]]$time)) })
+ # The following lines (Time_Points and output$TP1 etc simply setup the appropriate time points for the ui elements (since different data sets have different time points))
   Time_Points <-  reactive({ sort(unique(DF1list()[["data_list"]][[1]]$time)) })
   #      Time_Points <-   sort(unique(DF1list()[["data"]]$time)) 
   output$TP1 <-  renderText({ Time_Points()[1] }) 
@@ -78,8 +82,11 @@ shinyServer(function(input, output, session) {
   output$TP3 <-  renderText({ Time_Points()[3] }) 
   output$TP4 <-  renderText({ Time_Points()[4] }) 
   output$TP5 <-  renderText({ Time_Points()[5] }) 
-  # output$title <-  renderText({ DF1list()[['title']] }) 
 
+
+  #  'create.network1.1 is run once for each different 'Omics' so that they are separate networks.  
+  # The return value of the function of course is a list with the length corresponding to the number of
+  # Omics chosen.  This function selects according to q_value and log2fc (user input) then
   
   DF2 <-  reactive({
     #  create.network1.1(DF1 = DF1list()[["data"]], Qval = input$q_value,  LOG2FC= input$log2FC)
@@ -90,6 +97,7 @@ shinyServer(function(input, output, session) {
     DF_list
   })
   
+  # this is the workhorse function for network creation.  The 
   network_object_react <- 
     reactive({  withProgress(message = "Selecting Nodes", value = 0.1, { 
            N_O_list <- list()
@@ -203,7 +211,8 @@ shinyServer(function(input, output, session) {
       cyNetwork <- createCytoscapeNetwork(nodeData(), combined_edges())
 #      cyNetwork <- createCytoscapeNetwork(nodeData(), selected_edges())
 
-      cytoscapeJsSimpleNetwork2(cyNetwork$nodes, cyNetwork$edges, layout=input$layout)
+      cytoscapeJsSimpleNetwork2(cyNetwork$nodes, cyNetwork$edges, layout=input$layout, plot_size = input$CyJS_size)
+      
     }) # close withProgress Generating Cytoscape.js
     }) 
     output$cytoscapeJsTable_edges <-    ({ DT::renderDataTable({ combined_edges() }) }) 
