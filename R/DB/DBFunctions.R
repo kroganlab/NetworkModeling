@@ -48,9 +48,17 @@ getModProteomics = function(cell_line, strain, lfc=2, q=0.05, table, mapping='my
   return(res)
 }
 
-# special function for mouse because mapping is complicated 
-getMouseMetabolomics = function(cell_line, strain, lfc, q, condition_1='.*', condition_2='.*', only_known_metabolites=FALSE, mouse_human_orthology_confidence=1, by="confidence", id_list=NULL){
-  con = myConnect()
+# special function to get Metabolomics data from DB 
+getMetabolomics = function(cell_line, strain, lfc, q, condition_1='.*', condition_2='.*', only_known_metabolites=FALSE, mouse_human_orthology_confidence=1, by="confidence", id_list=NULL, SPECIES="mouse"){
+  # pick species
+  if(SPECIES == "mouse"){
+    species_table = 'metabolomics_mouse'
+  }else if(SPECIES == "human"){
+    species_table <- "metabolomics_human"
+  }else{
+    stop("Wrong species type entered for getMetabolimics function. Please use 'human' or 'mouse'.")
+  }
+  # how to select the data
   if(by=="confidence"){
     criteria = sprintf("and M.`adj_pvalue` < %s and abs(M.`log2fc`) > %s", q, lfc)
   }else if(by=="entrez_id"){
@@ -60,15 +68,18 @@ getMouseMetabolomics = function(cell_line, strain, lfc, q, condition_1='.*', con
   }else{
     criteria = ""
   }
+  # get rest of query
   if(only_known_metabolites){
-    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.metabolite as 'id', M.rounded_mass_id, HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join `metabolomics_mouse` M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' and HE.`orthology_confidence` >= %s %s", cell_line, strain, condition_1, condition_2, mouse_human_orthology_confidence, criteria)   
+    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.metabolite as 'id', M.rounded_mass_id, HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join %s M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' and HE.`orthology_confidence` >= %s %s", species_table, cell_line, strain, condition_1, condition_2, mouse_human_orthology_confidence, criteria)   
   }else if(only_known_metabolites==F){
-    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.metabolite as 'id', M.rounded_mass_id, HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join `metabolomics_mouse` M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` left join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` left join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", cell_line, strain, condition_1, condition_2, criteria)    
+    query = sprintf("select E.experiment_id, E.omics_type, E.condition_1, E.condition_2, E.cell_line, E.strain, E.status, M.metabolite as 'id', M.rounded_mass_id, HE.`entrez_gene_id_mouse` as 'entrez_id', '' as 'uniprot_ac', MI.`kegg_id`, M.log2fc, M.adj_pvalue as 'q_value' from experiments E join %s M on M.`experiment_id` = E.`experiment_id` and M.`sample_1` = E.`sample_1_code` and M.`sample_2` = E.`sample_2_code` left join `metabolomics_ids` MI on MI.`rounded_mass_id` = M.`rounded_mass_id` left join `mapping_hmdb_mouse_entrez` HE on HE.`hmdb` = MI.`hmdb_id`  where E.`cell_line` regexp '%s' and E.`strain` regexp '%s' and E.`condition_1` regexp '%s' and E.`condition_2` regexp '%s' %s", species_table, cell_line, strain, condition_1, condition_2, criteria)    
   }else{
     cat('bad combination of parameters\n')
     quit()
   }
+  
   #cat(str_c(query,'\n'))
+  con = myConnect()
   res = dbGetQuery(con, query)
   dbDisconnect(con)
   return(res)
@@ -110,6 +121,36 @@ getNames = function(name_table, values, original_id, new_id='gene_name'){
   dbDisconnect(con)
   return(res)
 }
+
+# Get the HMDB database
+getHMDB = function(){
+  con = myConnect()
+  query = sprintf("select * from hmdb_description")
+  res = dbGetQuery(con, query)
+  dbDisconnect(con)
+  return(res)
+}
+
+
+
+getHMDB2entrez = function(species){
+  con = myConnect()
+  if(species == "human"){
+    query = sprintf("select * from mapping_hmdb_human_entrez")
+    res = dbGetQuery(con, query)
+  }else if( species == "mouse"){
+    query = sprintf("select * from mapping_hmdb_mouse_entrez")
+    res = dbGetQuery(con, query)
+    res <- res[,1:2]
+    names(res)[2] <- 'entrez_id'
+  }else{
+    stop("ERROR: Incorrect species entered. Please use 'human' or 'mouse'.")
+  }
+  dbDisconnect(con)
+  return(res)
+}
+
+
 
 writeRNAseqGenomics = function(con, data, db_table){
   data_str = paste(apply(data,1,function(x)paste(x,collapse="','")),collapse="'),('")
