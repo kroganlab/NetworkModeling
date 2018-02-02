@@ -1,8 +1,8 @@
 # This script requires the user to have forwarded their MYSQL port 
-source('~/projects/NetworkModeling/R/DB/DBFunctions.R')
-source('~/projects/NetworkModeling/R/Networks/NetworkFunctions.R')
-source('~/projects/NetworkModeling/R/Fluomics/clustering/top_down_dend_clustering.R')
-source('~/projects/NetworkModeling/R/Fluomics/clustering/clustergrams.R')
+source('~/github/kroganlab/NetworkModeling/R/DB/DBFunctions.R')
+source('~/github/kroganlab/NetworkModeling/R/Networks/NetworkFunctions.R')
+source('~/github/kroganlab/NetworkModeling/R/Fluomics/clustering/top_down_dend_clustering.R')
+source('~/github/kroganlab/NetworkModeling/R/Fluomics/clustering/clustergrams.R')
 
 library(ggplot2)
 library(data.table)
@@ -54,7 +54,8 @@ globalCluster.getDatasets <- function(CELL_LINE, STRAIN, LFC=2, FDR=0.001, CONDI
 # creates a column name with cluster id and the percentages of each cluster made up by each dataset
 clusterBreakdown <- function(x){
   cat('Calculating dataset contributions to each cluster...\n')
-  x$dataset = gsub('\\|\\|\\|.*','',x$id)
+  # x$dataset = gsub('\\|\\|\\|.*','',x$id)
+  x$dataset = gsub('([A-Za-z]+)(_.*)','\\1',x$id)
   
   tmp = dcast(data=x, cluster~dataset)
   tmp[,-1] = round(tmp[,-1]/apply(tmp[,-1], 1, sum),2)*100
@@ -148,7 +149,7 @@ cleanClusters <- function(x, out_file, CELL_LINE){
   tmp$id = row.names(x)
   
   cat('Filtering clusters...\n')
-  # per cluster: calculate the median values for each time point, then check the variance between them all
+  # per cluster: calculate the median values for each time point, then check the variance between them all and keep only those that have a deffinitive shape
   tmp = melt(data=tmp, id=c('id','cluster'), variable.name='time', value.name='log2FC')
   tmp = dcast(tmp[,-1], cluster~time, value.var='log2FC', median)
   tmp = as.data.frame( cbind(tmp, diff=apply(tmp[,-1], 1, function(y){return(max(abs(y)))})), stringsAsFactors=F)
@@ -184,8 +185,8 @@ cleanClusters <- function(x, out_file, CELL_LINE){
 fixIDs <- function(x){
   #Shorten omics type
   x$omics_type[grep('rnaseq', x$omics_type)] = 'RNAseq'
-  x$omics_type[grep('ph', x$omics_type)] = 'PH'
-  x$omics_type[grep('ub', x$omics_type)] = 'UB'
+  x$omics_type[grep('ph|PH', x$omics_type)] = 'PH'
+  x$omics_type[grep('ub|UB', x$omics_type)] = 'UB'
   x$omics_type[grep('metabolomics', x$omics_type)] = 'MET'
   
   x$id = paste(x$omics_type,x$id, sep="|||")
@@ -195,12 +196,16 @@ fixIDs <- function(x){
 }
 
 
-globalCluster.main <- function(dat, out_file, cluster_size=50, cluster_method='kmeans', cor.thresh=.9){
-  dat.wide = dcast(data=dat, omics_type+id~condition_2, value.var='log2fc', median, na.rm=T)
+globalCluster.main <- function(dat, out_file, cluster_size=50, cluster_method='kmeans', cor_thresh=.9){
+  dat.wide = dcast(data=dat, id~condition_2, value.var='log2FC', median, na.rm=T)
+  
+  # remove any cases missing values  <-------- COULD LOOK MORE INTO FILLING IN MISSING VALUES
+  dat.wide <- dat.wide[-which(apply(is.na(dat.wide),1,any)),]
+  
   
   cat('Removing one to many conversion duplicates...\n')
   # combine all entrez id's of the one to many mappings so we can remove the duplicate values for clustering.
-  dat.wide = fixIDs(dat.wide)
+  # dat.wide = fixIDs(dat.wide)
   
   # set rownames as identifiers
   row.names(dat.wide) = dat.wide$id
@@ -230,7 +235,7 @@ globalCluster.main <- function(dat, out_file, cluster_size=50, cluster_method='k
     
   }else if(cluster_method=='topdown'){
     # perform top-down clustering on the dendocram created from hierarchical clustering based on a correlation matrix.
-    clusters.good = topdown.main(dat.wide, cor.thresh=cor.thresh, data_file=out_file)
+    clusters.good = topdown.main(dat.wide, cor_thresh=cor.thresh, data_file=out_file)
     
   }
   cat('Clustering Complete!\n')
